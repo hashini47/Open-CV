@@ -1,0 +1,65 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the image path for pika.jpg
+pika_image_path = '/content/pika.jpg'
+
+# Load the image
+pika_original_image = cv2.imread(pika_image_path)
+
+# Check if image was loaded successfully
+if pika_original_image is None:
+    print(f"Error: Could not load image from {pika_image_path}")
+else:
+    # Convert image to float32 for noise addition and normalize to [0, 1]
+    # Poisson noise is often applied to images as if pixel values are photon counts.
+    # We'll scale the image to a higher range to make the effect more visible and then apply Poisson noise.
+    
+    # Convert to grayscale first, as Poisson noise is typically applied to single-channel images, or apply per channel.
+    # For simplicity, let's convert to grayscale for a clear Poisson noise demonstration.
+    # If the user wants color, we can apply per channel later.
+    
+    # Convert to RGB for proper display with matplotlib if it's a color image
+    pika_original_image_rgb = cv2.cvtColor(pika_original_image, cv2.COLOR_BGR2RGB)
+    
+    # Convert to float and normalize to [0, 1]
+    img_float_normalized = pika_original_image_rgb.astype(np.float32) / 255.0
+    
+    # Scaling factor (lambda parameter for Poisson distribution)
+    # Higher lambda means more noise. Common values are 10-100.
+    # The pixel values are treated as the mean of the Poisson distribution.
+    lam = 50.0  # Adjust this value to control the intensity of the Poisson noise
+
+    # Generate Poisson noise. The np.random.poisson function expects integer 'lam'.
+    # So, we scale the image, convert to int, apply poisson, then scale back.
+    # A simpler approach is to use the normalized image directly for lam, but this can lead to very subtle noise.
+    # A more common approach is to scale the image up, apply Poisson, then scale back down.
+    
+    # Scale the image values to be suitable for lambda (e.g., counts)
+    scaled_image = img_float_normalized * lam
+    
+    # Generate Poisson noise based on the scaled image
+    poisson_noise = np.random.poisson(scaled_image).astype(np.float32)
+    
+    # Re-normalize the noisy image back to [0, 1] and then to [0, 255]
+    noisy_image_float = poisson_noise / lam
+    
+    # Clip values to stay within [0, 1] and convert back to uint8
+    pika_noisy_image = np.clip(noisy_image_float, 0, 1) * 255
+    pika_noisy_image = pika_noisy_image.astype(np.uint8)
+
+    # Display the original and noisy images
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.imshow(pika_original_image_rgb)
+    plt.title('Original Pika Image')
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(pika_noisy_image)
+    plt.title('Pika Image with Poisson Noise')
+    plt.axis('off')
+
+    plt.show()
