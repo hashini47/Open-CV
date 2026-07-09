@@ -1,0 +1,55 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define the image path for flower.jpg
+flower_image_path = '/content/flower.jpg'
+
+# Load the image
+flower_original_image = cv2.imread(flower_image_path)
+
+# Check if image was loaded successfully
+if flower_original_image is None:
+    print(f"Error: Could not load image from {flower_image_path}")
+else:
+    # Convert BGR to RGB for displaying with matplotlib
+    flower_original_image_rgb = cv2.cvtColor(flower_original_image, cv2.COLOR_BGR2RGB)
+
+    # Create a copy of the image to add noise to
+    flower_noisy_image = np.copy(flower_original_image_rgb)
+
+    # Define the amount of salt and pepper noise
+    s_vs_p = 0.5  # proportion of salt vs. pepper (0.5 means equal amounts)
+    amount = 0.04 # overall proportion of pixels to be affected by noise
+
+    # Get image dimensions
+    row, col, ch = flower_noisy_image.shape
+
+    # Add salt noise
+    num_salt = np.ceil(amount * flower_noisy_image.size * s_vs_p)
+    coords = [np.random.randint(0, i - 1, int(num_salt)) for i in flower_noisy_image.shape]
+    # Convert to a tuple of arrays for advanced indexing
+    coords_tuple_salt = tuple(coords)
+    flower_noisy_image[coords_tuple_salt[0], coords_tuple_salt[1], :] = 255
+
+    # Add pepper noise
+    num_pepper = np.ceil(amount * flower_noisy_image.size * (1.0 - s_vs_p))
+    coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in flower_noisy_image.shape]
+    # Convert to a tuple of arrays for advanced indexing
+    coords_tuple_pepper = tuple(coords)
+    flower_noisy_image[coords_tuple_pepper[0], coords_tuple_pepper[1], :] = 0
+
+    # Display the original and noisy images
+    plt.figure(figsize=(12, 6))
+
+    plt.subplot(1, 2, 1)
+    plt.imshow(flower_original_image_rgb)
+    plt.title('Original Flower Image')
+    plt.axis('off')
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(flower_noisy_image)
+    plt.title('Flower Image with Salt & Pepper Noise')
+    plt.axis('off')
+
+    plt.show()
